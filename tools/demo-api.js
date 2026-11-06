@@ -207,8 +207,8 @@
     if (p === '/api/sms/cancel') return { cancelled: 0 };
     if (p === '/api/sms/retry') return { n: 0 };
     if (p === '/api/password') err(400, 'В демо пароль не меняется');
-    if (p === '/api/update/status') return { version: '1.2.1', repo: 'zeus199191/nailcrm', running: false, log: '', enabled: true };
-    if (p === '/api/update/check') return { current: '1.2.1', latest: '1.2.1', available: false };
+    if (p === '/api/update/status') return { version: '1.3.0', repo: 'zeus199191/nailcrm', running: false, log: '', enabled: true };
+    if (p === '/api/update/check') return { current: '1.3.0', latest: '1.3.0', available: false };
     if (p.startsWith('/api/update/')) err(400, 'В демо обновление не работает — только на сервере');
     err(404, 'Нет в демо: ' + p);
   }

@@ -27,7 +27,9 @@ h3 { font-size: 12px; margin: 0 0 10px; color: var(--muted); font-weight: 600; t
 .side { background: var(--panel); border-right: 1px solid var(--line); padding: 18px 12px; position: sticky; top: 0; height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow-y: auto; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 20px; color: var(--text); }
 .mark { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; font: italic 500 19px var(--serif); color: var(--accent); flex: none; background: #FFFDF9; }
-.brand b { display: block; font: 500 19px/1.1 var(--serif); } .brand span { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+.brand > span { display: flex; flex-direction: column; min-width: 0; }
+.brand b { display: block; font: 500 20px/1.1 var(--serif); white-space: nowrap; }
+.brand > span > span { font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin-top: 3px; white-space: nowrap; }
 .nav a { display: flex; align-items: center; gap: 11px; padding: 9px 10px; border-radius: 10px; color: var(--text2); margin-bottom: 2px; font-weight: 500; }
 .nav a:hover { background: var(--panel2); color: var(--text); }
 .nav a.active { background: var(--accentbg); color: var(--accent2); font-weight: 600; }

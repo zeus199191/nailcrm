@@ -180,6 +180,9 @@ const findClients = (q) => {
 
 // ================= иконки =================
 const I = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+// логотип (в демо-версии — встроенный)
+const LOGO = () => window.DEMO_LOGO || '/img/logo-mark.png';
+const LOGO_FULL = () => window.DEMO_LOGO_FULL || '/img/logo-full.png';
 const ICONS = {
   home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
   cal: '<rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',
@@ -221,14 +224,14 @@ function renderShell() {
   $('#root').innerHTML = `${window.DEMO_API ? '<div class="demo-band">Демо-версия: данные хранятся только в этом браузере. <a href="#" id="demoSite">Открыть сайт</a> · <a href="#" id="demoReset">Сбросить демо</a></div>' : ''}
   <div class="app">
     <aside class="side">
-      <a class="brand" href="#/"><span class="mark">${esc(initials(S('master_name')).slice(0, 2))}</span><span><b>${esc(S('master_name') || 'Мастер')}</b><span>nail studio</span></span></a>
+      <a class="brand" href="#/"><img class="logo-img" src="${LOGO()}" alt="" style="height:36px;width:auto"><span><b>${esc(S('master_name') || 'Мастер')}</b><span>Pro Nails School</span></span></a>
       <nav class="nav">${NAV.map(([p, t, i]) => `<a href="#${p}" data-p="${p}">${ic(i)}<span>${t}</span>${badge(p)}</a>`).join('')}</nav>
       <div class="foot">
         <a class="btn ghost sm" href="${window.DEMO_API ? '#' : '/'}" ${window.DEMO_API ? 'data-site' : 'target="_blank"'} style="justify-content:flex-start">${ic('site')}Мой сайт</a>
         <button class="ghost sm" id="logout" style="justify-content:flex-start">${ic('logout')}Выйти${D.me ? ` <span class="muted small">· ${esc(D.me.name)}</span>` : ''}</button>
       </div>
     </aside>
-    <div class="mobilebar"><span class="mark" style="width:32px;height:32px;font-size:16px">${esc(initials(S('master_name')).slice(0, 2))}</span><span class="t" id="mtitle"></span><button class="primary icon" id="mPlus" aria-label="Новая запись">${ic('plus')}</button></div>
+    <div class="mobilebar"><img src="${LOGO()}" alt="" style="height:30px;width:auto"><span class="t" id="mtitle"></span><button class="primary icon" id="mPlus" aria-label="Новая запись">${ic('plus')}</button></div>
     <main class="main" id="page"></main>
     <nav class="tabbar">${TABS.map((p) => { const n = NAV.find((x) => x[0] === p); return `<a href="#${p}" data-p="${p}">${ic(n[2])}<span>${n[1]}</span>${badge(p)}</a>`; }).join('')}<a href="#" id="moreBtn" data-p="more">${ic('more')}<span>Ещё</span></a></nav>
   </div>`;
@@ -287,8 +290,8 @@ const rerender = () => navigate();
 function renderLogin() {
   D.__loaded = false;
   $('#root').innerHTML = `<div class="login"><form class="box" id="lf">
-    <span class="mark" style="width:54px;height:54px;font-size:24px">${esc(initials(S('master_name') || 'А М'))}</span>
-    <h1>Вход в CRM</h1><p class="muted" style="margin:0 0 18px">${esc(S('master_name') || 'Мастер маникюра')}</p>
+    <img src="${LOGO_FULL()}" alt="Алена Макарова · Pro Nails School" style="display:block;height:120px;width:auto;margin:0 auto 6px">
+    <h1 style="text-align:center">Вход в CRM</h1><p class="muted" style="margin:0 0 18px;text-align:center">для мастера и администратора</p>
     <div class="form"><label class="f">Логин<input name="login" autocomplete="username" value="${window.DEMO_API ? 'admin' : ''}" autocapitalize="none"></label>
     <label class="f">Пароль<input name="password" type="password" autocomplete="current-password" value="${window.DEMO_API ? 'demo' : ''}"></label>
     <button class="primary" style="min-height:48px">Войти</button>
@@ -305,7 +308,7 @@ const isAdmin = () => !D.me || D.me.role === 'admin';
 function forcePassword() {
   D.__loaded = false;
   $('#root').innerHTML = `<div class="login"><form class="box" id="fp">
-    <span class="mark" style="width:54px;height:54px;font-size:24px">${esc(initials(D.me.name))}</span>
+    <img src="${LOGO()}" alt="" style="display:block;height:56px;width:auto">
     <h1>Придумайте пароль</h1><p class="muted" style="margin:0 0 18px">${esc(D.me.name)}, это ваш первый вход. Задайте свой пароль — дальше входите с ним.</p>
     <div class="form"><label class="f">Текущий (выданный) пароль<input name="old" type="password" autocomplete="current-password" required></label>
     <label class="f">Новый пароль, от 6 символов<input name="new" type="password" autocomplete="new-password" required></label>

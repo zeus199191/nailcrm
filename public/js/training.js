@@ -140,7 +140,7 @@ async function certificate(s) {
   .t{font-size:12pt;color:#5C524B}.n{font:italic 500 40pt 'Cormorant Garamond',serif;color:#85663A;margin:6mm 0}.cr{font:500 22pt 'Cormorant Garamond',serif}
   .ft{display:flex;justify-content:space-between;width:100%;margin-top:16mm;font-size:11pt;color:#5C524B}.ft b{display:block;font:500 16pt 'Cormorant Garamond',serif;color:#2A2420;border-top:1px solid #B9975F;padding-top:2mm;margin-top:10mm;min-width:60mm}
   @media screen{body{background:#eee}.c{margin:20px auto;box-shadow:0 10px 40px rgba(0,0,0,.15);background:#fff}}</style></head><body>
-  <div class="c"><div class="in"><div class="e">Сертификат № ${esc(s.cert_no)}</div><h1>Сертификат</h1><div class="t">подтверждает, что</div><div class="n">${esc(c?.name || '')}</div>
+  <div class="c"><div class="in"><img src="${new URL(LOGO(), location.href).href}" alt="" style="height:30mm;width:auto;margin-bottom:4mm"><div class="e">Pro Nails School · Сертификат № ${esc(s.cert_no)}</div><h1>Сертификат</h1><div class="t">подтверждает, что</div><div class="n">${esc(c?.name || '')}</div>
   <div class="t">успешно прошла обучение по программе</div><div class="cr">«${esc(cr?.title || '')}»${cr?.hours ? ` · ${cr.hours} ч` : ''}</div>
   <div class="ft"><div>Дата<b>${dmy(date)}</b></div><div>Мастер-инструктор<b>${esc(S('master_name'))}</b></div></div></div></div>
   <script>setTimeout(function(){window.print()},600)<\/script></body></html>`);
