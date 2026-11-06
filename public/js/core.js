@@ -225,7 +225,7 @@ function renderShell() {
       <nav class="nav">${NAV.map(([p, t, i]) => `<a href="#${p}" data-p="${p}">${ic(i)}<span>${t}</span>${badge(p)}</a>`).join('')}</nav>
       <div class="foot">
         <a class="btn ghost sm" href="${window.DEMO_API ? '#' : '/'}" ${window.DEMO_API ? 'data-site' : 'target="_blank"'} style="justify-content:flex-start">${ic('site')}Мой сайт</a>
-        <button class="ghost sm" id="logout" style="justify-content:flex-start">${ic('logout')}Выйти</button>
+        <button class="ghost sm" id="logout" style="justify-content:flex-start">${ic('logout')}Выйти${D.me ? ` <span class="muted small">· ${esc(D.me.name)}</span>` : ''}</button>
       </div>
     </aside>
     <div class="mobilebar"><span class="mark" style="width:32px;height:32px;font-size:16px">${esc(initials(S('master_name')).slice(0, 2))}</span><span class="t" id="mtitle"></span><button class="primary icon" id="mPlus" aria-label="Новая запись">${ic('plus')}</button></div>
@@ -300,10 +300,30 @@ function renderLogin() {
     try { await api('POST', '/api/login', formData(e.target)); await boot(); } catch (er) { fail(er); }
   };
 }
+const isAdmin = () => !D.me || D.me.role === 'admin';
+// пароль, выданный администратором, нужно сменить при первом входе
+function forcePassword() {
+  D.__loaded = false;
+  $('#root').innerHTML = `<div class="login"><form class="box" id="fp">
+    <span class="mark" style="width:54px;height:54px;font-size:24px">${esc(initials(D.me.name))}</span>
+    <h1>Придумайте пароль</h1><p class="muted" style="margin:0 0 18px">${esc(D.me.name)}, это ваш первый вход. Задайте свой пароль — дальше входите с ним.</p>
+    <div class="form"><label class="f">Текущий (выданный) пароль<input name="old" type="password" autocomplete="current-password" required></label>
+    <label class="f">Новый пароль, от 6 символов<input name="new" type="password" autocomplete="new-password" required></label>
+    <label class="f">Новый пароль ещё раз<input name="new2" type="password" autocomplete="new-password" required></label>
+    <button class="primary" style="min-height:48px">Сохранить и войти</button></div></form></div>`;
+  $('#fp').onsubmit = async (e) => {
+    e.preventDefault(); const f = formData(e.target);
+    if (f.new.length < 6) return toast('Пароль — минимум 6 символов', true);
+    if (f.new !== f.new2) return toast('Пароли не совпадают', true);
+    try { await api('POST', '/api/password', { old: f.old, new: f.new }); toast('Пароль сохранён'); await boot(); } catch (er) { fail(er); }
+  };
+}
 async function boot() {
   try {
     const me = await api('GET', '/api/me');
     if (!me.user) { if (!window.DEMO_API) { try { Object.assign(D.settings, { master_name: '' }); } catch {} } return renderLogin(); }
+    D.me = me.user;
+    if (me.user.must_change) return forcePassword();
     await loadAll(); D.__loaded = true; renderShell(); navigate();
   } catch (e) { if (!/Требуется вход/.test(e.message)) { $('#root').innerHTML = `<div class="login"><div class="box"><h1>Нет связи</h1><p class="muted">${esc(e.message)}</p><button class="primary" onclick="location.reload()">Повторить</button></div></div>`; } }
 }

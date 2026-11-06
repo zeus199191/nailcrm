@@ -19,13 +19,16 @@ const MEDIA = path.join(DATA_DIR, 'media');
 // Первый запуск: создаём вход для мастера
 if (get('SELECT COUNT(*) n FROM users').n === 0) {
   const pw = process.env.ADMIN_PASSWORD || require('node:crypto').randomBytes(6).toString('base64url');
-  run("INSERT INTO users(login,name,pass_hash) VALUES('admin',?,?)", getSetting('master_name') || 'Мастер', auth.hashPassword(pw));
+  run("INSERT INTO users(login,name,pass_hash,role) VALUES('admin','Администратор',?,'admin')", auth.hashPassword(pw));
   console.log('==============================================');
   console.log(' Вход в CRM:  логин admin');
   console.log(' Пароль:      ' + pw);
   console.log('==============================================');
   fs.writeFileSync(path.join(DATA_DIR, 'FIRST_ADMIN_PASSWORD.txt'), `login: admin\npassword: ${pw}\n`, { mode: 0o600 });
 }
+
+// раньше вход admin назывался именем мастера — переименуем, чтобы не путать с учёткой мастера
+if (!getSetting('admin_renamed')) { run("UPDATE users SET name='Администратор' WHERE login='admin' AND name=?", getSetting('master_name') || ''); require('./lib/db').setSetting('admin_renamed', '1'); }
 
 const version = require('./package.json').version;
 const server = http.createServer(async (req, res) => {
@@ -44,6 +47,7 @@ const server = http.createServer(async (req, res) => {
       const opts = m.handlers.find((h) => typeof h === 'object') || {};
       const fns = m.handlers.filter((h) => typeof h === 'function');
       if (!opts.public && !user) throw new HttpError(401, 'Требуется вход');
+      if (opts.admin && user.role !== 'admin') throw new HttpError(403, 'Это может только администратор');
       if (!opts.public && req.method !== 'GET') { // защита от CSRF
         const origin = req.headers.origin;
         if (origin && new URL(origin).hostname !== String(req.headers.host).split(':')[0]) throw new HttpError(403, 'Запрос с чужого сайта');

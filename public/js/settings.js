@@ -72,6 +72,9 @@ route(/^\/settings$/, (page) => {
   <div class="card form"><h2 class="serif" style="font-size:24px;font-weight:500;margin:0">Безопасность и данные</h2>
     <div class="row"><button class="sm" id="pw">Сменить пароль</button>${window.DEMO_API ? '' : `<a class="btn sm" href="/api/backup">${ic('download')}Скачать копию базы</a>`}</div>
     <div class="hint">Копия базы сохраняется на сервере каждую ночь (30 последних). Файл открывается программой DB Browser for SQLite.</div></div>
+  <div class="card form" id="fUsers" style="margin-top:14px"><div class="row"><h2 class="serif" style="font-size:24px;font-weight:500;margin:0;flex:1">Пользователи</h2><button type="button" class="sm primary" id="uAdd">${ic('plus')}Добавить</button></div>
+    <div class="list" id="uList"><div class="hint">Загрузка…</div></div>
+    <div class="hint"><b>Мастер</b> — все функции CRM. <b>Администратор</b> — ещё пользователи, обновления CRM и домен. Выданный пароль человек сам меняет при первом входе.</div></div>
   </div></div>`;
 
   const bind = (id, map) => { const f = $('#' + id, page); f.onsubmit = async (e) => { e.preventDefault(); try { let d = formData(f); if (map) d = map(d); await saveSettings(d); toast('Сохранено'); rerender(); } catch (er) { fail(er); } }; };
@@ -150,7 +153,7 @@ route(/^\/settings$/, (page) => {
     };
     i.click();
   };
-  updCheck();
+  if (isAdmin()) updCheck();
 
   // ---------- домен ----------
   const domDraw = async () => {
@@ -173,7 +176,33 @@ route(/^\/settings$/, (page) => {
       try { updDraw(await api('POST', '/api/domain/connect', { domain: d, email: $('#domMail', page).value })); $('#fUpd', page).scrollIntoView({ behavior: 'smooth' }); updPoll(); } catch (er) { fail(er); }
     };
   };
-  domDraw();
+  if (isAdmin()) domDraw();
+
+  // ---------- пользователи ----------
+  const ROLE = { admin: 'Администратор', master: 'Мастер' };
+  const userModal = (u = {}) => modal(u.id ? 'Пользователь' : 'Новый пользователь', `<div class="form">
+    <div class="two"><label class="f">Имя<input name="name" value="${esc(u.name || '')}" placeholder="Алена" required></label><label class="f">Логин<input name="login" value="${esc(u.login || '')}" ${u.id ? 'disabled' : ''} placeholder="alena" autocapitalize="none"></label></div>
+    <div class="two"><label class="f">Роль<select name="role">${opts(Object.entries(ROLE), u.role || 'master')}</select></label><label class="f">${u.id ? 'Новый пароль (если нужно сбросить)' : 'Пароль'}<input name="password" autocomplete="new-password" ${u.id ? '' : 'required'}></label></div>
+    ${u.id ? `<label class="chk"><input type="checkbox" name="active" ${u.active ? 'checked' : ''}> Вход разрешён</label>` : ''}
+    <div class="hint">Выданный пароль человек сменит при первом входе.</div></div>`, {
+    onSubmit: async (f) => {
+      if (u.id) await api('PUT', '/api/users/' + u.id, { name: f.name, role: f.role, active: f.active, ...(f.password ? { password: f.password } : {}) });
+      else await api('POST', '/api/users', f);
+      toast('Сохранено'); drawUsers();
+    },
+  });
+  const drawUsers = async () => {
+    const el = $('#uList', page); if (!el) return;
+    try {
+      const list = await api('GET', '/api/users');
+      el.innerHTML = list.map((u) => `<div class="item click" data-u="${u.id}" style="${u.active ? '' : 'opacity:.5'}"><span class="av">${esc(initials(u.name))}</span><span class="main-t"><b>${esc(u.name)}${D.me && D.me.id === u.id ? ' <span class="muted small">(вы)</span>' : ''}</b><span class="muted">логин ${esc(u.login)}${u.active ? '' : ' · вход отключён'}</span></span><span class="badge ${u.role === 'admin' ? 'b-violet' : 'b-ok'}">${ROLE[u.role] || u.role}</span></div>`).join('');
+      $$('[data-u]', el).forEach((x) => (x.onclick = () => userModal(list.find((u) => u.id === +x.dataset.u))));
+    } catch (e) { el.innerHTML = `<div class="hint">${esc(e.message)}</div>`; }
+  };
+  if (isAdmin() && !window.DEMO_API) { $('#uAdd', page).onclick = () => userModal(); drawUsers(); }
+  // мастер не видит системные разделы
+  if (!isAdmin() || window.DEMO_API) $$('#fUsers', page).forEach((e) => e.remove());
+  if (!isAdmin()) $$('#fDom, #fUpd', page).forEach((e) => e.remove());
   $('#pw', page).onclick = () => modal('Смена пароля', `<div class="form"><label class="f">Текущий пароль<input type="password" name="old" autocomplete="current-password"></label><label class="f">Новый пароль (от 6 символов)<input type="password" name="new" autocomplete="new-password"></label></div>`, { onSubmit: async (f) => { await api('POST', '/api/password', f); toast('Пароль изменён'); } });
   if (location.hash.includes('#', 1)) { const id = location.hash.split('#').pop(); const el = $('#' + id, page); if (el) el.scrollIntoView(); }
 });
