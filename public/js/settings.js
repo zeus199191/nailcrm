@@ -19,7 +19,11 @@ route(/^\/settings$/, (page) => {
     <div class="two">${inp('social_tg', 'Telegram (ссылка)', 'https://t.me/...')}${inp('social_wa', 'WhatsApp (ссылка)', 'https://wa.me/7...')}</div>
     <div class="two">${inp('social_vk', 'ВКонтакте', 'https://vk.com/...')}${inp('social_max', 'MAX', 'https://max.ru/...')}</div>
     ${inp('review_url', 'Ссылка на отзывы (2ГИС, Яндекс Карты)', 'https://2gis.ru/...')}
-    <div class="row"><img src="${esc(mediaUrl(S('hero_photo')))}" style="width:64px;height:80px;object-fit:cover;border-radius:32px 32px 8px 8px;border:1px solid var(--line)" alt=""><button type="button" class="sm" id="hero">${ic('photo')}Сменить фото на сайте</button></div>`)}
+    <div class="row"><img src="${esc(mediaUrl(S('hero_photo')))}" style="width:64px;height:80px;object-fit:cover;border-radius:32px 32px 8px 8px;border:1px solid var(--line)" alt=""><button type="button" class="sm" id="hero">${ic('photo')}Сменить фото на сайте</button></div>
+    <label class="f">Фон сайта — розы в сепии</label>
+    <div class="row"><button type="button" class="sm" id="bgUp">${ic('upload')}Загрузить своё фото фона</button>${S('site_bg') && S('site_bg') !== 'none' ? '<button type="button" class="sm" id="bgDef">Вернуть стандартные розы</button>' : ''}<label class="chk small"><input type="checkbox" id="bgOff" ${S('site_bg') === 'none' ? '' : 'checked'}> показывать фон</label></div>
+    <label class="f">Насыщенность фона<input type="range" name="site_bg_opacity" min="0.08" max="0.5" step="0.02" value="${esc(S('site_bg_opacity') || '0.28')}"></label>
+    <div class="hint">Любое фото автоматически станет бежевым и полупрозрачным. Лучше подходят светлые фото цветов без текста.</div>`)}
   ${card('fBook', 'График и онлайн-запись', `
     <label class="f">Рабочие дни</label><div class="chips">${[1, 2, 3, 4, 5, 6, 0].map((d) => `<label class="chip"><input type="checkbox" name="wd_${d}" ${days.includes(d) ? 'checked' : ''}> ${DOW[d]}</label>`).join('')}</div>
     <div class="three"><label class="f">С<input type="time" name="work_from" value="${esc(S('work_from'))}"></label><label class="f">До<input type="time" name="work_to" value="${esc(S('work_to'))}"></label>
@@ -86,6 +90,9 @@ route(/^\/settings$/, (page) => {
   $('[name=ai_provider]', page).onchange = aip; aip();
   const smsx = $('#fSms [data-extra]', page); smsx.innerHTML = `<button type="button" class="sm" id="smsT">Тестовая SMS</button>`;
   $('#smsT', page).onclick = () => modal('Тестовая SMS', `<label class="f">Номер<input name="phone" type="tel" value="${esc(S('phone'))}"></label>`, { submit: 'Отправить', onSubmit: async (f) => { await api('POST', '/api/sms/test', { phone: f.phone }); toast('SMS отправлена'); } });
+  $('#bgUp', page).onclick = async () => { const f = await pickFiles(false); if (!f.length) return; try { await uploadPhotos(f, 'bg'); await loadAll(); toast('Фон обновлён'); rerender(); } catch (e) { fail(e); } };
+  const bd = $('#bgDef', page); if (bd) bd.onclick = async () => { await saveSettings({ site_bg: '' }); toast('Стандартный фон'); rerender(); };
+  $('#bgOff', page).onchange = async (e) => { await saveSettings({ site_bg: e.target.checked ? '' : 'none' }); toast(e.target.checked ? 'Фон включён' : 'Фон выключен'); rerender(); };
   $('#hero', page).onclick = async () => { const f = await pickFiles(false); if (!f.length) return; try { await uploadPhotos(f, 'hero'); await loadAll(); toast('Фото обновлено'); rerender(); } catch (e) { fail(e); } };
   $('#addOff', page).onclick = () => modal('Выходные / отпуск', `<div class="form"><div class="two"><label class="f">С<input type="date" name="date_from" value="${today()}" required></label><label class="f">По<input type="date" name="date_to" value="${today()}"></label></div><label class="f">Заметка<input name="note" placeholder="Отпуск, учёба, праздник"></label></div>`, { onSubmit: async (f) => { await save('time_off', f); rerender(); } });
   $$('[data-dt]', page).forEach((b) => (b.onclick = async () => { await del('time_off', b.dataset.dt); rerender(); }));

@@ -1,7 +1,7 @@
 {
   "name": "nailcrm",
-  "version": "1.3.0",
-  "releaseNotes": "Логотип Pro Nails School на сайте, в CRM, на входе, в сертификате и на иконке приложения",
+  "version": "1.4.0",
+  "releaseNotes": "Логотип Pro Nails School и фон сайта из роз в бежевой сепии (можно заменить своим фото)",
   "description": "CRM мастера маникюра и инструктора: запись, клиенты, обучение, финансы самозанятой, SMM, SMS, ИИ",
   "main": "server.js",
   "private": true,

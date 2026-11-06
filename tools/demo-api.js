@@ -187,7 +187,7 @@
     if (p === '/api/link-code') return { code: String(100000 + Math.floor(Math.random() * 899999)) };
     if (p === '/api/notify-test' || p === '/api/sms/test') { if (p === '/api/sms/test') smsPush({ phone: body.phone, text: 'Проверка SMS из CRM', kind: 'test' }); persist(); return { ok: true }; }
     if (p === '/api/integrations') return integrations();
-    if (p === '/api/upload') { if (body.as === 'hero') { sett().hero_photo = body.data; sett().hero_custom = 1; } persist(); return { file: body.data, url: body.data }; }
+    if (p === '/api/upload') { if (body.as === 'hero') { sett().hero_photo = body.data; sett().hero_custom = 1; } if (body.as === 'bg') sett().site_bg = body.data; persist(); return { file: body.data, url: body.data }; }
     if (p === '/api/ai' || p === '/api/ai/test') { await new Promise((r) => setTimeout(r, 700)); return { text: p === '/api/ai/test' ? 'Готов помогать с текстами! (демо)' : demoAi(body.preset, body.prompt) }; }
     if ((m = /^\/api\/posts\/(\d+)\/publish$/.exec(p))) {
       const post = DB.posts.find((x) => x.id === +m[1]); if (!post) err(404, 'Пост не найден');
@@ -207,8 +207,8 @@
     if (p === '/api/sms/cancel') return { cancelled: 0 };
     if (p === '/api/sms/retry') return { n: 0 };
     if (p === '/api/password') err(400, 'В демо пароль не меняется');
-    if (p === '/api/update/status') return { version: '1.3.0', repo: 'zeus199191/nailcrm', running: false, log: '', enabled: true };
-    if (p === '/api/update/check') return { current: '1.3.0', latest: '1.3.0', available: false };
+    if (p === '/api/update/status') return { version: '1.4.0', repo: 'zeus199191/nailcrm', running: false, log: '', enabled: true };
+    if (p === '/api/update/check') return { current: '1.4.0', latest: '1.4.0', available: false };
     if (p.startsWith('/api/update/')) err(400, 'В демо обновление не работает — только на сервере');
     err(404, 'Нет в демо: ' + p);
   }
