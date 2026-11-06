@@ -342,6 +342,8 @@ const paidFor = (apptId) => D.payments.filter((p) => p.appointment_id === apptId
 const paidStudent = (sid) => D.payments.filter((p) => p.student_id === sid).reduce((s, p) => s + (+p.amount || 0), 0);
 const cohortTitle = (h) => (!h ? '' : h.title || ((byId('courses', h.course_id)?.title || 'Поток') + (h.start_date ? ' · с ' + dmy(h.start_date) : '')));
 const isWorkDay = (ds) => String(S('work_days') || '1,2,3,4,5,6').split(',').map(Number).includes(new Date(ds + 'T12:00').getDay()) && !D.time_off.some((t) => ds >= t.date_from && ds <= (t.date_to || t.date_from));
+// учёт налога самозанятой выключен до отдельного подключения (настройка tax_on = 1)
+const TAX = () => S('tax_on') === '1';
 const taxRate = (p) => (p.payer === 'company' ? +S('tax_company') || 6 : +S('tax_person') || 4);
 function birthdaySoon(c, days = 7) {
   if (!c.birthday) return null;

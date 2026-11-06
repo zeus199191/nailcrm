@@ -14,6 +14,7 @@ route(/^\/$/, (page) => {
   const incMonth = payMonth.reduce((s, p) => s + +p.amount, 0);
   const taxMonth = payMonth.reduce((s, p) => s + p.amount * taxRate(p) / 100, 0);
   const noReceipt = D.payments.filter((p) => !p.receipt).length;
+  const week7 = D.appointments.filter((a) => a.kind === 'client' && SH.ACTIVE.includes(a.status) && a.date >= t && a.date <= addDays(t, 6));
   const requests = D.appointments.filter((a) => a.status === 'request');
   const newLeads = D.leads.filter((l) => l.status === 'new');
   const bdays = D.clients.map((c) => [c, birthdaySoon(c, 7)]).filter(([, d]) => d !== null).sort((a, b) => a[1] - b[1]);
@@ -29,8 +30,10 @@ route(/^\/$/, (page) => {
   <div class="grid g4" style="margin-bottom:14px">
     <div class="kpi click" data-go="/calendar"><div class="l">Сегодня</div><div class="v">${todays.filter((a) => a.kind === 'client').length} ${plural(todays.filter((a) => a.kind === 'client').length, 'клиентка', 'клиентки', 'клиенток')}</div><div class="s">${planned ? 'ожидается ' + rub(planned) : 'свободный день'}</div></div>
     <div class="kpi click" data-go="/finance"><div class="l">Получено сегодня</div><div class="v ok">${rub(payToday)}</div><div class="s">за месяц ${rub(incMonth)}</div></div>
-    <div class="kpi click" data-go="/finance"><div class="l">Налог за ${MONTHS_NOM[n.getMonth()].toLowerCase()}</div><div class="v">${rub(taxMonth)}</div><div class="s">уплатить до 28 числа</div></div>
-    <div class="kpi click" data-go="/finance?f=noreceipt"><div class="l">Чеки не выданы</div><div class="v ${noReceipt ? 'warn' : ''}">${noReceipt}</div><div class="s">${noReceipt ? 'пробейте в «Мой налог»' : 'всё в порядке'}</div></div>
+    ${TAX() ? `<div class="kpi click" data-go="/finance"><div class="l">Налог за ${MONTHS_NOM[n.getMonth()].toLowerCase()}</div><div class="v">${rub(taxMonth)}</div><div class="s">уплатить до 28 числа</div></div>
+    <div class="kpi click" data-go="/finance?f=noreceipt"><div class="l">Чеки не выданы</div><div class="v ${noReceipt ? 'warn' : ''}">${noReceipt}</div><div class="s">${noReceipt ? 'пробейте в «Мой налог»' : 'всё в порядке'}</div></div>`
+    : `<div class="kpi click" data-go="/calendar?v=week"><div class="l">Записей на неделю</div><div class="v">${week7.length}</div><div class="s">${week7.length ? 'на ' + rub(week7.reduce((s, a) => s + (+a.total || 0), 0)) : 'окна свободны'}</div></div>
+    <div class="kpi click" data-go="/leads"><div class="l">Новые заявки</div><div class="v ${requests.length + newLeads.length ? 'warn' : ''}">${requests.length + newLeads.length}</div><div class="s">${requests.length + newLeads.length ? 'ждут ответа' : 'всё обработано'}</div></div>`}
   </div>
   <div class="grid g-main">
     <div class="card"><div class="row" style="margin-bottom:6px"><h3 style="margin:0">Записи на сегодня</h3><span class="sp"></span><a href="#/calendar?v=day&d=${t}" class="small">Календарь →</a></div>

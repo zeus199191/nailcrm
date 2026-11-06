@@ -195,10 +195,10 @@ function payModal({ appt, student, amount, kind, onDone } = {}) {
     ${c ? `<div class="sum-line"><span>${esc(c.name)}<br><span class="small muted">${esc(what)}</span></span></div>` : ''}
     <label class="f">Сумма, ₽<input name="amount" type="number" inputmode="numeric" min="0" step="10" value="${sum || ''}" required style="font-size:22px;font-family:var(--serif)"></label>
     <div class="two"><label class="f">Способ<select name="method">${opts([['card', 'Перевод на карту'], ['cash', 'Наличные']], 'card')}</select></label>
-    <label class="f">Плательщик<select name="payer">${opts([['person', `Физлицо — налог ${S('tax_person') || 4}%`], ['company', `ИП или компания — ${S('tax_company') || 6}%`]], 'person')}</select></label></div>
-    <label class="f">Дата<input name="date" type="date" value="${appt && appt.date <= today() ? appt.date : today()}"></label>
-    <label class="chk"><input type="checkbox" name="receipt"> Чек в «Мой налог» уже выдан</label>
-    <div class="hint">Самозанятой нужно выдать чек на каждую оплату. Неотмеченные оплаты собраны в «Финансах» — их удобно пробить разом в приложении «Мой налог».</div>
+    ${TAX() ? `<label class="f">Плательщик<select name="payer">${opts([['person', `Физлицо — налог ${S('tax_person') || 4}%`], ['company', `ИП или компания — ${S('tax_company') || 6}%`]], 'person')}</select></label></div>
+    <label class="f">Дата<input name="date" type="date" value="${appt && appt.date <= today() ? appt.date : today()}"></label>` : `<label class="f">Дата<input name="date" type="date" value="${appt && appt.date <= today() ? appt.date : today()}"></label></div>`}
+    ${TAX() ? `<label class="chk"><input type="checkbox" name="receipt"> Чек в «Мой налог» уже выдан</label>
+    <div class="hint">Самозанятой нужно выдать чек на каждую оплату. Неотмеченные оплаты собраны в «Финансах» — их удобно пробить разом в приложении «Мой налог».</div>` : ''}
   </div>`, {
     submit: 'Принять оплату',
     onSubmit: async (f) => {

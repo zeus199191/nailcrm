@@ -30,7 +30,7 @@ route(/^\/settings$/, (page) => {
     <label class="f">Выходные и отпуск</label>
     <div class="list" id="toff">${D.time_off.length ? D.time_off.slice().sort((a, b) => a.date_from.localeCompare(b.date_from)).map((t) => `<div class="item"><span class="main-t"><b>${dmy(t.date_from)}${t.date_to && t.date_to !== t.date_from ? ' — ' + dmy(t.date_to) : ''}</b><span class="muted">${esc(t.note || '')}</span></span><button type="button" class="sm ghost icon" data-dt="${t.id}">${ic('trash')}</button></div>`).join('') : '<div class="hint">Нет. В эти дни онлайн-запись закрыта.</div>'}</div>
     <button type="button" class="sm" id="addOff" style="align-self:flex-start">${ic('plus')}Выходные / отпуск</button>`)}
-  ${card('fTax', 'Налог самозанятой', `<div class="three">${inp('tax_person', 'С физлиц, %', '4', 'number')}${inp('tax_company', 'С ИП и компаний, %', '6', 'number')}${inp('npd_limit', 'Лимит в год, ₽', '2400000', 'number')}</div>`, 'Налог считается с каждой оплаты в «Финансах». Чеки пробиваются в приложении «Мой налог», в CRM вы отмечаете, что чек выдан.')}
+  ${!TAX() ? '' : card('fTax', 'Налог самозанятой', `<div class="three">${inp('tax_person', 'С физлиц, %', '4', 'number')}${inp('tax_company', 'С ИП и компаний, %', '6', 'number')}${inp('npd_limit', 'Лимит в год, ₽', '2400000', 'number')}</div>`, 'Налог считается с каждой оплаты в «Финансах». Чеки пробиваются в приложении «Мой налог», в CRM вы отмечаете, что чек выдан.')}
   ${card('fSite', 'Сайт', `${chk('site_on', 'Сайт включён (иначе главная страница сразу открывает вход в CRM)')}
     ${inp('site_url', 'Адрес сайта', 'https://...')}
     <div class="hint">Заявки и онлайн-записи с сайта сразу попадают в «Заявки», а уведомление приходит в Telegram или MAX.${S('api_key') ? `<br>Ключ для внешних форм (Тильда, квизы): <code>${esc(S('api_key'))}</code> — POST /api/public/lead` : ''}</div>`)}
@@ -78,7 +78,7 @@ route(/^\/settings$/, (page) => {
   </div></div>`;
 
   const bind = (id, map) => { const f = $('#' + id, page); f.onsubmit = async (e) => { e.preventDefault(); try { let d = formData(f); if (map) d = map(d); await saveSettings(d); toast('Сохранено'); rerender(); } catch (er) { fail(er); } }; };
-  bind('fProfile'); bind('fTax'); bind('fSite'); bind('fSms'); bind('fNotify'); bind('fSocial'); bind('fAi');
+  bind('fProfile'); if (TAX()) bind('fTax'); bind('fSite'); bind('fSms'); bind('fNotify'); bind('fSocial'); bind('fAi');
   bind('fBook', (d) => { const wd = [1, 2, 3, 4, 5, 6, 0].filter((x) => d['wd_' + x]); Object.keys(d).filter((k) => k.startsWith('wd_')).forEach((k) => delete d[k]); d.work_days = wd.join(','); return d; });
   const prov = () => $$('[data-p]', page).forEach((x) => x.classList.toggle('hidden', x.dataset.p !== $('[name=sms_provider]', page).value));
   $('[name=sms_provider]', page).onchange = prov; prov();
