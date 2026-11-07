@@ -1,7 +1,7 @@
 {
   "name": "nailcrm",
-  "version": "1.4.0",
-  "releaseNotes": "Логотип Pro Nails School и фон сайта из роз в бежевой сепии (можно заменить своим фото)",
+  "version": "1.5.0",
+  "releaseNotes": "Кнопка «Instagram» в посте: фото в Instagram с телефона, подпись без цен и призывов",
   "description": "CRM мастера маникюра и инструктора: запись, клиенты, обучение, финансы самозанятой, SMM, SMS, ИИ",
   "main": "server.js",
   "private": true,

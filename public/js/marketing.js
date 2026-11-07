@@ -67,7 +67,7 @@ function smm(el, q) {
   <div class="card" style="padding:6px 12px"><h3 style="padding:8px 4px 0">Все посты</h3><div class="list">${posts.length ? posts.map((p) => {
     const res = p.results || {}; const media = p.media || [];
     return `<div class="item click" data-post="${p.id}">${media[0] ? `<img src="${esc(mediaUrl(media[0]))}" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex:none" alt="">` : `<span class="av" style="border-radius:10px;background:var(--panel2)">${ic('photo')}</span>`}
-      <span class="main-t"><b>${esc(p.title || (p.text || 'Без текста').slice(0, 60))}</b><span class="muted">${p.date ? dmy(p.date) + (p.time ? ' ' + p.time : '') + ' · ' : ''}${(p.channels || []).map((c) => CH[c] + (res[c] ? (res[c].ok ? ' ✓' : ' ✗') : '')).join(', ') || 'каналы не выбраны'}</span></span>
+      <span class="main-t"><b>${esc(p.title || (p.text || 'Без текста').slice(0, 60))}</b><span class="muted">${p.date ? dmy(p.date) + (p.time ? ' ' + p.time : '') + ' · ' : ''}${(p.channels || []).map((c) => CH[c] + (res[c] ? (res[c].ok ? ' ✓' : ' ✗') : '')).join(', ') || 'каналы не выбраны'}${res.ig ? ' · Instagram ✓' : ''}</span></span>
       <span class="badge ${p.status === 'published' ? 'b-ok' : p.status === 'ready' ? 'b-warn' : p.status === 'draft' ? 'b-info' : p.status === 'idea' ? '' : 'b-bad'}">${POST_ST[p.status] || p.status}</span></div>`;
   }).join('') : '<div class="empty">Постов пока нет. Начните с идеи или сразу с фото работы.</div>'}</div></div>`;
   $$('[data-m]', el).forEach((b) => (b.onclick = () => go('/marketing?tab=smm&m=' + b.dataset.m)));
@@ -75,6 +75,21 @@ function smm(el, q) {
   $$('[data-day]', el).forEach((d) => (d.onclick = (e) => { if (e.target.closest('[data-post]')) return; postModal({ date: d.dataset.day, status: 'idea' }); }));
   $$('[data-post]', el).forEach((d) => (d.onclick = (e) => { e.stopPropagation(); postModal(byId('posts', d.dataset.post)); }));
   $('#ideas', el).onclick = ideasModal;
+}
+// Подпись для Instagram: без цен, скидок, призывов записаться, контактов и ссылок —
+// в Instagram в РФ реклама запрещена с 01.09.2025, а рассказ о своих работах — нет.
+const IG_BAD = /(₽|руб|\bр\.|\d\s?(р|к|тыс)\b|цен[аыуеой]|стоимост|скидк|акци|бесплатн|подар|выгод|запис|бронир|звон|пиши|напиш|директ|личк|whatsapp|ватсап|вотсап|telegram|телеграм|вконтакт|\bвк\b|max\b|ссылк|переход|заказ|купи|покупк|оплат|прайс|сертификат|\+7|\b8\s?\(?9\d\d|https?:|www\.|\.ru\b|\.рф\b|t\.me|vk\.|📞|☎|📲|👉)/i;
+function igCaption(t) {
+  return String(t || '').split('\n').filter((l) => !IG_BAD.test(l)).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+async function mediaFiles(list) {
+  const out = [];
+  for (const [i, f] of list.entries()) {
+    const blob = await (await fetch(mediaUrl(f))).blob();
+    const type = blob.type && blob.type.startsWith('image/') ? blob.type : 'image/jpeg';
+    out.push(new File([blob], `photo-${i + 1}.${type.split('/')[1].replace('jpeg', 'jpg')}`, { type }));
+  }
+  return out;
 }
 function postModal(p = {}) {
   const st = { media: [...(p.media || [])] };
@@ -86,6 +101,7 @@ function postModal(p = {}) {
     <label class="f">Текст поста<textarea name="text" rows="7" placeholder="О чём пост: что за работа, оттенок, дизайн. ИИ поможет красиво написать.">${esc(p.text || '')}</textarea></label>
     <div class="row"><button type="button" class="sm" data-ai="post">${ic('wand')}Написать</button><button type="button" class="sm" data-ai="improve">Улучшить</button><button type="button" class="sm" data-ai="short">Короче</button><span class="sp"></span><span class="small muted" id="len"></span></div>
     <div class="hint">Для «Написать» коротко перечислите факты: что сделали, оттенок, дизайн, сколько держится. ИИ не придумывает цены и акции.</div>
+    <details><summary class="small muted" style="cursor:pointer">${ic('cam').replace('<svg', '<svg style="width:14px;height:14px;vertical-align:-2px"')} Подпись для Instagram — без цен, призывов и контактов</summary><div class="ai-out" id="igCap" style="margin-top:6px;font-size:13.5px"></div></details>
     <label class="f">Куда публикуем</label><div class="chips">${Object.entries(CH).map(([k, t]) => `<label class="chip"><input type="checkbox" name="ch_${k}" ${chans.includes(k) ? 'checked' : ''} ${chConnected(k) ? '' : 'disabled'}> ${t}${chConnected(k) ? '' : ' <span class="n">не подключён</span>'}${res[k] ? (res[k].ok ? ' ✓' : ' ✗') : ''}</label>`).join('')}</div>
     ${Object.values(res).some((r) => r && !r.ok) ? `<div class="notice warn">${Object.entries(res).filter(([, r]) => r && !r.ok).map(([k, r]) => `${CH[k] || k}: ${esc(r.error)}`).join('<br>')}</div>` : ''}
     <div class="three"><label class="f">Дата<input type="date" name="date" value="${p.date || ''}"></label><label class="f">Время<input type="time" name="time" value="${p.time || '10:00'}"></label>
@@ -93,16 +109,20 @@ function postModal(p = {}) {
     <div class="hint">«Готов к публикации» — пост уйдёт сам в указанные дату и время. Или нажмите «Опубликовать сейчас».</div>
   </div>`, {
     wide: true,
-    footer: `${p.id ? `<button type="button" class="danger icon" id="pdel">${ic('trash')}</button>` : ''}<button type="button" id="pub">${ic('send')}Опубликовать сейчас</button>`,
+    footer: `${p.id ? `<button type="button" class="danger icon" id="pdel">${ic('trash')}</button>` : ''}<button type="button" id="ig" title="Поделиться в Instagram с телефона">${ic('cam')}Instagram${res.ig ? ' ✓' : ''}</button><button type="button" id="pub">${ic('send')}Опубликовать сейчас</button>`,
     onSubmit: async (f) => { await savePost(f); toast('Сохранено'); rerender(); },
     onOpen: (form, close) => {
       const drawTh = () => {
         $('#th', form).innerHTML = st.media.map((f, i) => `<div class="thumb"><img src="${esc(mediaUrl(f))}" alt=""><button type="button" data-rm="${i}" aria-label="Убрать">${ic('x')}</button></div>`).join('') + `<div class="thumb add" id="addPh">${ic('plus')}<span>Добавить фото</span></div>`;
         $$('[data-rm]', form).forEach((b) => (b.onclick = () => { st.media.splice(+b.dataset.rm, 1); drawTh(); }));
+        // фото для «Поделиться» готовим заранее: телефон разрешает открыть окно только сразу по нажатию
+        st.files = null; const want = st.media.join('|');
+        if (st.media.length) mediaFiles(st.media).then((fs) => { if (st.media.join('|') === want) st.files = fs; }).catch(() => {});
         $('#addPh', form).onclick = async () => { const files = await pickFiles(); if (!files.length) return; toast('Загружаю фото…'); try { (await uploadPhotos(files)).forEach((r) => st.media.push(r.file)); drawTh(); } catch (e) { fail(e); } };
       };
       drawTh();
-      const len = () => ($('#len', form).textContent = form.text.value.length + ' симв.'); form.text.oninput = len; len();
+      const len = () => { $('#len', form).textContent = form.text.value.length + ' симв.'; $('#igCap', form).textContent = igCaption(form.text.value) || '— пусто: в тексте только цены и призывы —'; };
+      form.text.oninput = len; len();
       $$('[data-ai]', form).forEach((b) => (b.onclick = async () => {
         const mode = b.dataset.ai; const txt = form.text.value.trim();
         if (!txt && !form.title.value.trim()) return toast('Напишите пару слов о работе — ИИ нужны факты', true);
@@ -132,6 +152,30 @@ function postModal(p = {}) {
           if (r.status === 'published') { toast('Опубликовано'); if (r.channels.includes('site')) D.works = (await api('GET', '/api/data')).works; close(); rerender(); }
           else { toast('Есть ошибки — смотрите в посте', true); close(); rerender(); postModal(r); }
         } catch (er) { fail(er); b.disabled = false; b.innerHTML = ic('send') + 'Опубликовать сейчас'; }
+      };
+      $('#ig', form).onclick = () => {
+        if (!st.media.length) return toast('Добавьте хотя бы одно фото', true);
+        const cap = igCaption(form.text.value);
+        const mark = async () => {
+          try {
+            const row = await savePost(formData(form));
+            const r = { ...(row.results || {}), ig: { ok: true, manual: true, at: new Date().toISOString() } };
+            await save('posts', { id: row.id, results: r, status: row.status === 'published' ? 'published' : row.status, published_at: row.published_at || null });
+            $('#ig', form).innerHTML = ic('cam') + 'Instagram ✓';
+          } catch {}
+        };
+        if (cap && navigator.clipboard) navigator.clipboard.writeText(cap).catch(() => {});
+        const can = navigator.canShare && st.files && navigator.canShare({ files: st.files });
+        if (can) {
+          navigator.share({ files: st.files }).then(() => { mark(); toast('Подпись скопирована — в Instagram нажмите на поле подписи и «Вставить»'); }).catch((e) => { if (e.name !== 'AbortError') fail(e); });
+          return;
+        }
+        if (navigator.canShare && !st.files) return toast('Готовлю фото — нажмите ещё раз через секунду');
+        // компьютер или браузер без «Поделиться»: подпись и фото вручную
+        modal('Instagram', `<div class="form"><div class="notice">Публикация в Instagram делается с телефона: откройте этот пост в CRM на телефоне и нажмите «Instagram». Или скачайте фото и вставьте подпись вручную.</div>
+          <label class="f">Подпись (без цен и призывов)<textarea rows="6" id="igT">${esc(cap)}</textarea></label>
+          <div class="row"><button type="button" class="sm" id="igC">${ic('copy')}Скопировать подпись</button>${st.media.map((f, i) => `<a class="btn sm" href="${esc(mediaUrl(f))}" download="photo-${i + 1}.jpg">${ic('download')}Фото ${i + 1}</a>`).join('')}</div></div>`,
+          { submit: 'Отметить: опубликовано', onSubmit: async () => { await mark(); toast('Отмечено'); }, onOpen: (f2) => { $('#igC', f2).onclick = () => copyText($('#igT', f2).value); } });
       };
       const d = $('#pdel', form); if (d) d.onclick = async () => { if (await confirmBox('Удалить пост? Опубликованное в соцсетях останется.', 'Удалить')) { await del('posts', p.id); close(); rerender(); } };
     },
