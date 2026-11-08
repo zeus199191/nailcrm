@@ -183,7 +183,7 @@ function postModal(p = {}) {
   async function savePost(f) { return m.el._save(f); }
 }
 function ideasModal() {
-  modal('ИИ: идеи постов на месяц', `<div class="form"><label class="f">Пожелания (необязательно)<input name="wish" placeholder="например: больше про обучение, акция на педикюр"></label><div id="out"></div></div>`, {
+  modal('ИИ: идеи постов на месяц', `<div class="form"><label class="f">Пожелания (необязательно)<input name="wish" placeholder="например: больше про обучение, акция на наращивание"></label><div id="out"></div></div>`, {
     submit: 'Придумать',
     onSubmit: async (f, form) => {
       $('#out', form).innerHTML = '<div class="hint">ИИ думает…</div>';
